@@ -40,10 +40,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_logged_in) {
     }
 }
 
-// Resolver ocorrência
+// Resolver ocorrência (apenas o autor pode resolver)
 if (isset($_GET['resolver']) && $is_logged_in) {
     $id = intval($_GET['resolver']);
-    $conn->query("UPDATE ocorrencias SET estado='Resolvido' WHERE id=$id");
+    // Verificar se o utilizador logado é o autor da ocorrência
+    $check_autor = $conn->query("SELECT utilizador_id FROM ocorrencias WHERE id = $id");
+    if ($check_autor && $check_autor->num_rows > 0) {
+        $oc = $check_autor->fetch_assoc();
+        if ($oc['utilizador_id'] == $user_id) {
+            $conn->query("UPDATE ocorrencias SET estado='Resolvido' WHERE id=$id");
+        }
+    }
     header("Location: index.php");
     exit;
 }
@@ -295,7 +302,7 @@ function countComentarios($conn, $ocorrencia_id) {
                                 </div>
                             </div>
 
-                            <?php if (!$is_resolved && $is_logged_in): ?>
+                            <?php if (!$is_resolved && $is_logged_in && $o['utilizador_id'] == $user_id): ?>
                                 <div class="ocorrencia-actions">
                                     <a href="index.php?resolver=<?= $o['id'] ?>" class="btn btn-success btn-sm">
                                       Marcar como Resolvido
