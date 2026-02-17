@@ -1,0 +1,20 @@
+# Ignorar no build Docker
+.git
+.gitignore
+.dockerignore
+README.md
+docker-compose.yml
+Dockerfile
+
+# Pastas desnecessárias
+node_modules
+vendor
+.idea
+.vscode
+
+# Arquivos de log
+*.log
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
