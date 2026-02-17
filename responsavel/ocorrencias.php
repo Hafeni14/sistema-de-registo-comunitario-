@@ -2,7 +2,7 @@
 include("../config/db.php");
 session_start();
 
-/* Ações */
+/* Acoes */
 if(isset($_GET['resolver'])){
     $id = (int) $_GET['resolver'];
     mysqli_query($conn, "UPDATE ocorrencias SET estado='Resolvida' WHERE id=$id");
@@ -111,13 +111,14 @@ $result = mysqli_query($conn, "
                                 <th>Reportado por</th>
                                 <th>Data</th>
                                 <th>Estado</th>
+                                <th>Imagem</th>
                                 <th>Ação</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if(mysqli_num_rows($result) == 0): ?>
                                 <tr>
-                                    <td colspan="7" class="text-center p-4">
+                                    <td colspan="8" class="text-center p-4">
                                         <div class="text-muted">Nenhuma ocorrência encontrada</div>
                                     </td>
                                 </tr>
@@ -144,9 +145,16 @@ $result = mysqli_query($conn, "
                                         </span>
                                     </td>
                                     <td>
+                                        <?php if (!empty($o['imagem'])): ?>
+                                            <a href="<?= $o['imagem'] ?>" target="_blank" class="btn btn-outline btn-sm">Ver</a>
+                                        <?php else: ?>
+                                            <span class="text-muted">-</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
                                         <?php if(!$is_resolved): ?>
                                             <a class="btn btn-success btn-sm" href="?resolver=<?= $o['id'] ?>">
-                                                ✅ Resolver
+                                                Resolver
                                             </a>
                                         <?php else: ?>
                                             <span class="text-muted">—</span>
