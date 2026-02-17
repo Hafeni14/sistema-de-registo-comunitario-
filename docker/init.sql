@@ -57,3 +57,37 @@ INSERT INTO ocorrencias (titulo, descricao, tipo, bairro_id, utilizador_id, esta
     ('Falta de água na Rua Principal', 'Não há abastecimento de água há 3 dias na rua principal do bairro.', 'Água', 1, 1, 'Pendente'),
     ('Poste de luz danificado', 'Poste de iluminação pública caído após tempestade na Av. Central.', 'Energia', 2, 1, 'Pendente'),
     ('Acúmulo de lixo', 'Grande quantidade de lixo acumulado no terreno baldio próximo à escola.', 'Lixo', 3, 1, 'Resolvida');
+
+-- Tabela de Likes
+CREATE TABLE IF NOT EXISTS likes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ocorrencia_id INT NOT NULL,
+    utilizador_id INT NOT NULL,
+    data_registo TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ocorrencia_id) REFERENCES ocorrencias(id) ON DELETE CASCADE,
+    FOREIGN KEY (utilizador_id) REFERENCES utilizadores(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_like (ocorrencia_id, utilizador_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Tabela de Comentários
+CREATE TABLE IF NOT EXISTS comentarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ocorrencia_id INT NOT NULL,
+    utilizador_id INT NOT NULL,
+    texto TEXT NOT NULL,
+    data_registo TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ocorrencia_id) REFERENCES ocorrencias(id) ON DELETE CASCADE,
+    FOREIGN KEY (utilizador_id) REFERENCES utilizadores(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Inserir alguns comentários de exemplo
+INSERT INTO comentarios (ocorrencia_id, utilizador_id, texto) VALUES 
+    (1, 1, 'Também estou com este problema há dias!'),
+    (1, 1, 'Já liguei para a companhia de águas mas ninguém resolve.'),
+    (2, 1, 'Muito perigoso, especialmente à noite.'),
+    (3, 1, 'Finalmente resolveram! Obrigado.');
+
+-- Inserir alguns likes de exemplo
+INSERT INTO likes (ocorrencia_id, utilizador_id) VALUES 
+    (1, 1),
+    (2, 1);
