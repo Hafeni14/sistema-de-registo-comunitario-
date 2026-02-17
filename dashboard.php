@@ -57,7 +57,7 @@ $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
 
             <!-- WELCOME SECTION -->
             <div class="welcome-section fade-in">
-                <h2>Olá, <?= $nome ?>! 👋</h2>
+                <h2>Olá, <?= $nome ?>!</h2>
                 <p>Bem-vindo ao sistema de registo de ocorrências comunitárias. Selecione uma categoria abaixo para registar uma nova ocorrência.</p>
             </div>
 
@@ -70,8 +70,8 @@ $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
             <!-- CATEGORY CARDS -->
             <div class="dashboard-grid fade-in">
                 <a href="nova_ocorrencia.php?tipo=Água" class="dashboard-card">
-                    <div class="card-image-placeholder">
-                        [Imagem: Ícone de gota de água]
+                    <div class="card-image-box">
+                        <img src="imagens/water.jpg" alt="Água" style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px;">
                     </div>
                     <h3>Água</h3>
                     <p>Problemas de abastecimento de água</p>
@@ -79,8 +79,8 @@ $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
                 </a>
 
                 <a href="nova_ocorrencia.php?tipo=Energia" class="dashboard-card">
-                    <div class="card-image-placeholder">
-                        [Imagem: Ícone de raio/energia]
+                    <div class="card-image-box">
+                        <img src="imagens/eletricity.jpg" alt="Energia" style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px;">
                     </div>
                     <h3>Energia</h3>
                     <p>Falhas elétricas e iluminação</p>
@@ -88,8 +88,8 @@ $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
                 </a>
 
                 <a href="nova_ocorrencia.php?tipo=Lixo" class="dashboard-card">
-                    <div class="card-image-placeholder">
-                        [Imagem: Ícone de lixeira/reciclagem]
+                    <div class="card-image-box">
+                        <img src="imagens/trash.jpg" alt="Lixo" style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px;">
                     </div>
                     <h3>Lixo</h3>
                     <p>Problemas de saneamento</p>
@@ -97,8 +97,8 @@ $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
                 </a>
 
                 <a href="nova_ocorrencia.php?tipo=Segurança" class="dashboard-card">
-                    <div class="card-image-placeholder">
-                        [Imagem: Ícone de escudo/segurança]
+                    <div class="card-image-box">
+                        <img src="imagens/security.png" alt="Segurança" style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px;">
                     </div>
                     <h3>Segurança</h3>
                     <p>Questões de risco público</p>
@@ -113,10 +113,10 @@ $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
 
             <div class="quick-actions fade-in">
                 <a href="minhas_ocorrencias.php" class="btn btn-secondary">
-                    📋 Minhas Ocorrências
+                    Minhas Ocorrências
                 </a>
                 <a href="index.php" class="btn btn-outline">
-                    🌍 Ver Todas as Ocorrências
+                    Ver Todas as Ocorrências
                 </a>
             </div>
 

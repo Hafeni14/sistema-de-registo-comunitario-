@@ -15,14 +15,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $tipo = $_POST["tipo"];
     $bairro = $_POST["bairro"];
     $user_id = $_SESSION["utilizador_id"];
+    $imagem_base64 = null;
 
-    $sql = "INSERT INTO ocorrencias (titulo, descricao, tipo, bairro_id, utilizador_id)
-            VALUES ('$titulo', '$descricao', '$tipo', '$bairro', '$user_id')";
+    // Processar upload de imagem
+    if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] == UPLOAD_ERR_OK) {
+        $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $file_type = $_FILES['imagem']['type'];
+        $file_size = $_FILES['imagem']['size'];
+        $max_size = 5 * 1024 * 1024; // 5MB
 
-    if ($conn->query($sql)) {
-        $sucesso = "Ocorrência registada com sucesso!";
-    } else {
-        $erro = "Erro ao registar: " . $conn->error;
+        if (in_array($file_type, $allowed_types) && $file_size <= $max_size) {
+            $image_data = file_get_contents($_FILES['imagem']['tmp_name']);
+            $imagem_base64 = 'data:' . $file_type . ';base64,' . base64_encode($image_data);
+        } else {
+            $erro = "Imagem inválida. Use JPG, PNG, GIF ou WEBP (max 5MB).";
+        }
+    }
+
+    if (!isset($erro)) {
+        $titulo_escaped = $conn->real_escape_string($titulo);
+        $descricao_escaped = $conn->real_escape_string($descricao);
+        $tipo_escaped = $conn->real_escape_string($tipo);
+        $imagem_escaped = $imagem_base64 ? $conn->real_escape_string($imagem_base64) : null;
+
+        if ($imagem_escaped) {
+            $sql = "INSERT INTO ocorrencias (titulo, descricao, imagem, tipo, bairro_id, utilizador_id)
+                    VALUES ('$titulo_escaped', '$descricao_escaped', '$imagem_escaped', '$tipo_escaped', '$bairro', '$user_id')";
+        } else {
+            $sql = "INSERT INTO ocorrencias (titulo, descricao, tipo, bairro_id, utilizador_id)
+                    VALUES ('$titulo_escaped', '$descricao_escaped', '$tipo_escaped', '$bairro', '$user_id')";
+        }
+
+        if ($conn->query($sql)) {
+            $sucesso = "Ocorrência registada com sucesso!";
+        } else {
+            $erro = "Erro ao registar: " . $conn->error;
+        }
     }
 }
 
@@ -86,7 +114,7 @@ $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
 
             <?php if (isset($sucesso)): ?>
                 <div class="alert alert-success fade-in">
-                    ✅ <?= htmlspecialchars($sucesso) ?>
+                    <?= htmlspecialchars($sucesso) ?>
                     <div class="mt-2">
                         <a href="minhas_ocorrencias.php" class="btn btn-success btn-sm">Ver Minhas Ocorrências</a>
                         <a href="nova_ocorrencia.php" class="btn btn-outline btn-sm">Registar Outra</a>
@@ -99,7 +127,7 @@ $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
             <?php endif; ?>
 
             <div class="form-container fade-in" style="max-width: 100%;">
-                <form method="POST">
+                <form method="POST" enctype="multipart/form-data">
                     <div class="form-group">
                         <label class="form-label" for="titulo">Título da Ocorrência</label>
                         <input type="text" id="titulo" name="titulo" class="form-control" placeholder="Ex: Falta de água na Rua Principal" required>
@@ -111,13 +139,19 @@ $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
                     </div>
 
                     <div class="form-group">
+                        <label class="form-label" for="imagem">Imagem (opcional)</label>
+                        <input type="file" id="imagem" name="imagem" class="form-control" accept="image/jpeg,image/png,image/gif,image/webp">
+                        <small class="text-muted">Formatos: JPG, PNG, GIF, WEBP. Tamanho máximo: 5MB</small>
+                    </div>
+
+                    <div class="form-group">
                         <label class="form-label" for="tipo">Tipo de Ocorrência</label>
                         <select id="tipo" name="tipo" class="form-control" required>
                             <option value="">Selecione o tipo</option>
-                            <option value="Água" <?= $tipo_selecionado == 'Água' ? 'selected' : '' ?>>💧 Água</option>
-                            <option value="Energia" <?= $tipo_selecionado == 'Energia' ? 'selected' : '' ?>>⚡ Energia</option>
-                            <option value="Lixo" <?= $tipo_selecionado == 'Lixo' ? 'selected' : '' ?>>🗑️ Lixo</option>
-                            <option value="Segurança" <?= $tipo_selecionado == 'Segurança' ? 'selected' : '' ?>>🛡️ Segurança</option>
+                            <option value="Água" <?= $tipo_selecionado == 'Água' ? 'selected' : '' ?>>Água</option>
+                            <option value="Energia" <?= $tipo_selecionado == 'Energia' ? 'selected' : '' ?>>Energia</option>
+                            <option value="Lixo" <?= $tipo_selecionado == 'Lixo' ? 'selected' : '' ?>>Lixo</option>
+                            <option value="Segurança" <?= $tipo_selecionado == 'Segurança' ? 'selected' : '' ?>>Segurança</option>
                         </select>
                     </div>
 
@@ -140,7 +174,7 @@ $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
                 </form>
 
                 <div class="text-center mt-3">
-                    <a href="dashboard.php" class="text-muted">← Voltar ao Dashboard</a>
+                    <a href="dashboard.php" class="text-muted">Voltar ao Dashboard</a>
                 </div>
             </div>
 

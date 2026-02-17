@@ -88,7 +88,7 @@ $total = $res->num_rows;
             <?php if ($total == 0): ?>
                 <!-- EMPTY STATE -->
                 <div class="empty-state fade-in">
-                    <div class="empty-state-icon">📋</div>
+                    <div class="empty-state-icon"></div>
                     <h3>Nenhuma ocorrência registada</h3>
                     <p>Você ainda não registou nenhuma ocorrência. Comece agora!</p>
                     <a href="nova_ocorrencia.php" class="btn btn-primary">Registar Primeira Ocorrência</a>
@@ -110,15 +110,21 @@ $total = $res->num_rows;
                             
                             <p class="ocorrencia-description"><?= htmlspecialchars($o['descricao']) ?></p>
                             
+                            <?php if (!empty($o['imagem'])): ?>
+                            <div class="ocorrencia-image">
+                                <img src="<?= $o['imagem'] ?>" alt="Imagem da ocorrência">
+                            </div>
+                            <?php endif; ?>
+                            
                             <div class="ocorrencia-meta">
                                 <span class="ocorrencia-meta-item">
                                     <span class="tag tag-<?= $tipo_class ?>"><?= htmlspecialchars($o['tipo']) ?></span>
                                 </span>
                                 <span class="ocorrencia-meta-item">
-                                    📍 <?= htmlspecialchars($o['bairro']) ?>
+                                    <?= htmlspecialchars($o['bairro']) ?>
                                 </span>
                                 <span class="ocorrencia-meta-item">
-                                    📅 <?= date('d/m/Y H:i', strtotime($o['data_registo'])) ?>
+                                    <?= date('d/m/Y H:i', strtotime($o['data_registo'])) ?>
                                 </span>
                             </div>
                         </div>
@@ -127,7 +133,7 @@ $total = $res->num_rows;
             <?php endif; ?>
 
             <div class="text-center mt-4">
-                <a href="dashboard.php" class="btn btn-outline">← Voltar ao Dashboard</a>
+                <a href="dashboard.php" class="btn btn-outline">Voltar ao Dashboard</a>
             </div>
 
         </div>

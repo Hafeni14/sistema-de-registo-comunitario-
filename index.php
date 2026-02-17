@@ -76,8 +76,9 @@ $iniciais = $is_logged_in ? strtoupper(substr($_SESSION['nome'], 0, 2)) : '';
     </nav>
 
     <!-- HERO SECTION -->
-    <section class="hero">
-        <div class="container">
+    <section class="hero hero-bg">
+        <div class="hero-overlay"></div>
+        <div class="container hero-content">
             <h1>Ocorrências Comunitárias</h1>
             <p>Juntos construímos uma comunidade melhor. Veja todas as ocorrências registadas e acompanhe o progresso das resoluções.</p>
             
@@ -87,12 +88,8 @@ $iniciais = $is_logged_in ? strtoupper(substr($_SESSION['nome'], 0, 2)) : '';
                     <a href="login.php" class="btn btn-outline" style="border-color: rgba(255,255,255,0.5); color: white;">Entrar</a>
                 </div>
             <?php else: ?>
-                <a href="nova_ocorrencia.php" class="btn btn-secondary">+ Registar Nova Ocorrência</a>
+                <a href="nova_ocorrencia.php" class="btn btn-secondary">+ Registar Nova Ocorrencia</a>
             <?php endif; ?>
-
-            <div class="hero-image-placeholder">
-                [Imagem: Ilustração de comunidade unida, pessoas colaborando, mapa da cidade]
-            </div>
         </div>
     </section>
 
@@ -109,7 +106,7 @@ $iniciais = $is_logged_in ? strtoupper(substr($_SESSION['nome'], 0, 2)) : '';
             <?php if ($total == 0): ?>
                 <!-- EMPTY STATE -->
                 <div class="empty-state fade-in">
-                    <div class="empty-state-icon">📋</div>
+                    <div class="empty-state-icon"></div>
                     <h3>Nenhuma ocorrência registada</h3>
                     <p>Ainda não existem ocorrências no sistema. Seja o primeiro a registar!</p>
                     <?php if ($is_logged_in): ?>
@@ -135,25 +132,31 @@ $iniciais = $is_logged_in ? strtoupper(substr($_SESSION['nome'], 0, 2)) : '';
                             
                             <p class="ocorrencia-description"><?= htmlspecialchars($o['descricao']) ?></p>
                             
+                            <?php if (!empty($o['imagem'])): ?>
+                            <div class="ocorrencia-image">
+                                <img src="<?= $o['imagem'] ?>" alt="Imagem da ocorrência">
+                            </div>
+                            <?php endif; ?>
+                            
                             <div class="ocorrencia-meta">
                                 <span class="ocorrencia-meta-item">
                                     <span class="tag tag-<?= $tipo_class ?>"><?= htmlspecialchars($o['tipo']) ?></span>
                                 </span>
                                 <span class="ocorrencia-meta-item">
-                                    📍 <?= htmlspecialchars($o['bairro']) ?>
+                                    <?= htmlspecialchars($o['bairro']) ?>
                                 </span>
                                 <span class="ocorrencia-meta-item">
-                                    👤 <?= htmlspecialchars($o['utilizador']) ?>
+                                    <?= htmlspecialchars($o['utilizador']) ?>
                                 </span>
                                 <span class="ocorrencia-meta-item">
-                                    📅 <?= date('d/m/Y H:i', strtotime($o['data_registo'])) ?>
+                                    <?= date('d/m/Y H:i', strtotime($o['data_registo'])) ?>
                                 </span>
                             </div>
 
                             <?php if (!$is_resolved && $is_logged_in): ?>
                                 <div class="ocorrencia-actions">
                                     <a href="index.php?resolver=<?= $o['id'] ?>" class="btn btn-success btn-sm">
-                                        ✅ Marcar como Resolvido
+                                      Marcar como Resolvido
                                     </a>
                                 </div>
                             <?php endif; ?>
