@@ -1,9 +1,9 @@
 <?php
-include "config/db.php"; // liga à base de dados
+include "config/db.php"; // liga a base de dados
 
 if ($conn) {
-    echo "Ligação à base de dados OK!";
+    echo "Ligacao a base de dados OK!";
 } else {
-    echo "Erro na ligação!";
+    echo "Erro na ligacao!";
 }
 ?>

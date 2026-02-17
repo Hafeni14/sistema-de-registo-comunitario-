@@ -1,0 +1,63 @@
+services:
+  # Aplicação PHP + Apache
+  app:
+    build: .
+    container_name: sistema-comunitario-app
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASS=root
+      - DB_NAME=ocorrencias_comunitarias
+    networks:
+      - app-network
+
+  # Base de Dados MySQL
+  db:
+    image: mysql:8.0
+    container_name: sistema-comunitario-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ocorrencias_comunitarias
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app-network
+
+  # phpMyAdmin (opcional, para gestão da BD)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: sistema-comunitario-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db_data:

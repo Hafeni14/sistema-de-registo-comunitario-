@@ -1,0 +1,29 @@
+# Dependências
+/vendor/
+/node_modules/
+
+# Ambiente
+.env
+.env.local
+.env.*.local
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
+
+# Docker
+docker/data/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Cache
+*.cache
+.phpunit.result.cache
+
+# Uploads de usuários (base64 no DB, não precisa de pasta)
+/uploads/
