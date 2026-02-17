@@ -228,17 +228,48 @@ a:hover {
     text-align: center;
 }
 
+/* Hero com imagem de fundo */
+.hero-bg {
+    position: relative;
+    background-image: url('../imagens/hero-comunidade.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8rem 0;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(130, 10, 209, 0.55);
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
 .hero h1 {
     color: var(--nu-white);
     font-size: 2.5rem;
     margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .hero p {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 1.125rem;
-    max-width: 600px;
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 1.25rem;
+    max-width: 650px;
     margin: 0 auto 2rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .hero-image-placeholder {
@@ -788,6 +819,26 @@ table tr:hover td {
     border-top: 1px solid var(--nu-gray-200);
 }
 
+/* IMAGEM DA OCORRÊNCIA */
+.ocorrencia-image {
+    margin: 1rem 0;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.ocorrencia-image img {
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.ocorrencia-image img:hover {
+    transform: scale(1.02);
+}
+
 /* EMPTY STATE */
 .empty-state {
     text-align: center;
@@ -1133,6 +1184,11 @@ footer {
 
     .hero {
         padding: 3rem 0;
+    }
+
+    .hero-bg {
+        min-height: 400px;
+        padding: 4rem 0;
     }
 
     .hero h1 {
