@@ -1,6 +1,7 @@
 <?php
 session_start();
 include "config/db.php";
+include "config/helpers.php";
 
 $is_logged_in = isset($_SESSION['utilizador_id']);
 $user_id = $is_logged_in ? $_SESSION['utilizador_id'] : null;
@@ -40,20 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_logged_in) {
     }
 }
 
-// Resolver ocorrência (apenas o autor pode resolver)
-if (isset($_GET['resolver']) && $is_logged_in) {
-    $id = intval($_GET['resolver']);
-    // Verificar se o utilizador logado é o autor da ocorrência
-    $check_autor = $conn->query("SELECT utilizador_id FROM ocorrencias WHERE id = $id");
-    if ($check_autor && $check_autor->num_rows > 0) {
-        $oc = $check_autor->fetch_assoc();
-        if ($oc['utilizador_id'] == $user_id) {
-            $conn->query("UPDATE ocorrencias SET estado='Resolvido' WHERE id=$id");
-        }
-    }
-    header("Location: index.php");
-    exit;
-}
+// Resolver ocorrência foi movido para o painel de administração
+// Apenas admins podem mudar o estado das ocorrências
 
 // Buscar todas ocorrências
 $sql = "
@@ -132,9 +121,15 @@ function countComentarios($conn, $ocorrencia_id) {
                     <a href="dashboard.php" class="nav-link">Dashboard</a>
                     <a href="minhas_ocorrencias.php" class="nav-link">Minhas Ocorrências</a>
                     <a href="index.php" class="nav-link active">Ver Todas</a>
+                    <?php if (!empty($_SESSION['is_admin'])): ?>
+                        <a href="responsavel/ocorrencias.php" class="nav-link" style="color: var(--nu-purple); font-weight: 700;">Painel Admin</a>
+                    <?php endif; ?>
                     <div class="nav-user">
                         <div class="user-avatar"><?= $iniciais ?></div>
                         <span class="user-name"><?= $nome ?></span>
+                        <?php if (!empty($_SESSION['is_admin'])): ?>
+                            <span class="admin-badge">Admin</span>
+                        <?php endif; ?>
                         <a href="logout.php" class="btn btn-outline btn-sm">Sair</a>
                     </div>
                 <?php else: ?>
@@ -189,9 +184,9 @@ function countComentarios($conn, $ocorrencia_id) {
             <?php else: ?>
                 <!-- OCCURRENCE LIST -->
                 <div class="ocorrencia-list fade-in">
-                    <?php while ($o = $res->fetch_assoc()): 
+                    <?php while ($o = $res->fetch_assoc()):
                         $tipo_class = strtolower(str_replace('ç', 'c', str_replace('á', 'a', $o['tipo'])));
-                        $is_resolved = $o['estado'] == 'Resolvida' || $o['estado'] == 'Resolvido';
+                        $status_class = getStatusClass($o['estado']);
                         $likes = getLikes($conn, $o['id'], $user_id);
                         $total_comentarios = countComentarios($conn, $o['id']);
                         $limit_comentarios = $is_logged_in ? null : 5;
@@ -200,7 +195,7 @@ function countComentarios($conn, $ocorrencia_id) {
                         <div class="ocorrencia-card" id="ocorrencia-<?= $o['id'] ?>">
                             <div class="ocorrencia-header">
                                 <h3 class="ocorrencia-title"><?= htmlspecialchars($o['titulo']) ?></h3>
-                                <span class="status-badge <?= $is_resolved ? 'resolved' : 'pending' ?>">
+                                <span class="status-badge <?= $status_class ?>">
                                     <?= htmlspecialchars($o['estado']) ?>
                                 </span>
                             </div>
@@ -302,11 +297,11 @@ function countComentarios($conn, $ocorrencia_id) {
                                 </div>
                             </div>
 
-                            <?php if (!$is_resolved && $is_logged_in && $o['utilizador_id'] == $user_id): ?>
-                                <div class="ocorrencia-actions">
-                                    <a href="index.php?resolver=<?= $o['id'] ?>" class="btn btn-success btn-sm">
-                                      Marcar como Resolvido
-                                    </a>
+                            <?php if ($is_logged_in && $o['utilizador_id'] == $user_id && isClosed($o['estado']) === false): ?>
+                                <div class="ocorrencia-actions" style="display:flex; align-items:center; gap:.75rem;">
+                                    <span style="font-size:0.8125rem; color: var(--nu-gray-500);">
+                                        A sua ocorrência está a ser acompanhada pela administração.
+                                    </span>
                                 </div>
                             <?php endif; ?>
                         </div>

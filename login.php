@@ -12,6 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($u && password_verify($senha, $u["senha"])) {
         $_SESSION["utilizador_id"] = $u["id"];
         $_SESSION["nome"] = $u["nome"];
+        $_SESSION["is_admin"] = !empty($u["is_admin"]) ? 1 : 0;
         header("Location: dashboard.php");
         exit;
     } else {

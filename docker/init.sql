@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS utilizadores (
     nome VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     senha VARCHAR(255) NOT NULL,
+    is_admin TINYINT(1) DEFAULT 0,
     data_registo TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -49,14 +50,21 @@ INSERT INTO bairros (nome) VALUES
     ('Parque Industrial');
 
 -- Inserir Utilizador de Teste (senha: 123456)
-INSERT INTO utilizadores (nome, email, senha) VALUES 
-    ('Utilizador Teste', 'teste@teste.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
+INSERT INTO utilizadores (nome, email, senha, is_admin) VALUES
+    ('Utilizador Teste', 'teste@teste.com', '$2y$10$wVvo0dZPwNrAlQCPIgSfJetwPVfDGVQKBYfuwlusAoD/lpT./JMy.', 0);
+
+-- Inserir Utilizador Administrador (senha: 123456)
+INSERT INTO utilizadores (nome, email, senha, is_admin) VALUES
+    ('Administrador', 'admin@sistema.com', '$2y$10$wVvo0dZPwNrAlQCPIgSfJetwPVfDGVQKBYfuwlusAoD/lpT./JMy.', 1);
 
 -- Inserir algumas ocorrências de exemplo
-INSERT INTO ocorrencias (titulo, descricao, tipo, bairro_id, utilizador_id, estado) VALUES 
+INSERT INTO ocorrencias (titulo, descricao, tipo, bairro_id, utilizador_id, estado) VALUES
     ('Falta de água na Rua Principal', 'Não há abastecimento de água há 3 dias na rua principal do bairro.', 'Água', 1, 1, 'Pendente'),
-    ('Poste de luz danificado', 'Poste de iluminação pública caído após tempestade na Av. Central.', 'Energia', 2, 1, 'Pendente'),
-    ('Acúmulo de lixo', 'Grande quantidade de lixo acumulado no terreno baldio próximo à escola.', 'Lixo', 3, 1, 'Resolvida');
+    ('Poste de luz danificado', 'Poste de iluminação pública caído após tempestade na Av. Central.', 'Energia', 2, 1, 'Em Análise'),
+    ('Acúmulo de lixo', 'Grande quantidade de lixo acumulado no terreno baldio próximo à escola.', 'Lixo', 3, 1, 'Resolvida'),
+    ('Buraco na calçada Av. das Flores', 'Buraco de grande dimensão na calçada, risco para peões.', 'Segurança', 4, 1, 'Em Progresso'),
+    ('Iluminação pública apagada', 'Vários postes de luz sem funcionar no bairro há semanas.', 'Energia', 5, 1, 'Aguardando Recursos'),
+    ('Lixo não recolhido há semanas', 'Recolha de lixo não realizada há 2 semanas nesta zona.', 'Lixo', 6, 1, 'Rejeitada');
 
 -- Tabela de Likes
 CREATE TABLE IF NOT EXISTS likes (

@@ -1,6 +1,7 @@
 <?php
 session_start();
 include "config/db.php";
+include "config/helpers.php";
 
 if (!isset($_SESSION["utilizador_id"])) {
     header("Location: login.php");
@@ -56,9 +57,15 @@ $total = $res->num_rows;
                 <a href="dashboard.php" class="nav-link">Dashboard</a>
                 <a href="minhas_ocorrencias.php" class="nav-link active">Minhas Ocorrências</a>
                 <a href="index.php" class="nav-link">Ver Todas</a>
+                <?php if (!empty($_SESSION['is_admin'])): ?>
+                    <a href="responsavel/ocorrencias.php" class="nav-link" style="color: var(--nu-purple); font-weight: 700;">Painel Admin</a>
+                <?php endif; ?>
                 <div class="nav-user">
                     <div class="user-avatar"><?= $iniciais ?></div>
                     <span class="user-name"><?= $nome ?></span>
+                    <?php if (!empty($_SESSION['is_admin'])): ?>
+                        <span class="admin-badge">Admin</span>
+                    <?php endif; ?>
                     <a href="logout.php" class="btn btn-outline btn-sm">Sair</a>
                 </div>
             </div>
@@ -96,14 +103,14 @@ $total = $res->num_rows;
             <?php else: ?>
                 <!-- OCCURRENCE LIST -->
                 <div class="ocorrencia-list fade-in">
-                    <?php while ($o = $res->fetch_assoc()): 
+                    <?php while ($o = $res->fetch_assoc()):
                         $tipo_class = strtolower(str_replace('ç', 'c', str_replace('á', 'a', $o['tipo'])));
-                        $is_resolved = $o['estado'] == 'Resolvida' || $o['estado'] == 'Resolvido';
+                        $status_class = getStatusClass($o['estado']);
                     ?>
                         <div class="ocorrencia-card">
                             <div class="ocorrencia-header">
                                 <h3 class="ocorrencia-title"><?= htmlspecialchars($o['titulo']) ?></h3>
-                                <span class="status-badge <?= $is_resolved ? 'resolved' : 'pending' ?>">
+                                <span class="status-badge <?= $status_class ?>">
                                     <?= htmlspecialchars($o['estado']) ?>
                                 </span>
                             </div>
@@ -127,6 +134,15 @@ $total = $res->num_rows;
                                     <?= date('d/m/Y H:i', strtotime($o['data_registo'])) ?>
                                 </span>
                             </div>
+                            <?php if (!isClosed($o['estado'])): ?>
+                                <div style="margin-top:.75rem; padding-top:.75rem; border-top:1px solid var(--nu-gray-200); font-size:.8125rem; color:var(--nu-gray-500);">
+                                    A sua ocorrência está a ser acompanhada pela administração.
+                                </div>
+                            <?php elseif ($o['estado'] === 'Rejeitada'): ?>
+                                <div style="margin-top:.75rem; padding-top:.75rem; border-top:1px solid var(--nu-gray-200); font-size:.8125rem; color:var(--nu-error);">
+                                    Esta ocorrência foi rejeitada pela administração.
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php endwhile; ?>
                 </div>

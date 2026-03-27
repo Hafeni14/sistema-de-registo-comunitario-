@@ -91,9 +91,15 @@ $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
                 <a href="dashboard.php" class="nav-link">Dashboard</a>
                 <a href="minhas_ocorrencias.php" class="nav-link">Minhas Ocorrências</a>
                 <a href="index.php" class="nav-link">Ver Todas</a>
+                <?php if (!empty($_SESSION['is_admin'])): ?>
+                    <a href="responsavel/ocorrencias.php" class="nav-link" style="color: var(--nu-purple); font-weight: 700;">Painel Admin</a>
+                <?php endif; ?>
                 <div class="nav-user">
                     <div class="user-avatar"><?= $iniciais ?></div>
                     <span class="user-name"><?= $nome ?></span>
+                    <?php if (!empty($_SESSION['is_admin'])): ?>
+                        <span class="admin-badge">Admin</span>
+                    <?php endif; ?>
                     <a href="logout.php" class="btn btn-outline btn-sm">Sair</a>
                 </div>
             </div>

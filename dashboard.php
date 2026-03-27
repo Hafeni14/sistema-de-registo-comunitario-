@@ -4,9 +4,19 @@ if (!isset($_SESSION["utilizador_id"])) {
     header("Location: login.php");
     exit;
 }
+include "config/db.php";
+include "config/helpers.php";
 
 $nome = htmlspecialchars($_SESSION["nome"]);
 $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
+$user_id = $_SESSION["utilizador_id"];
+$is_admin = !empty($_SESSION['is_admin']);
+
+// Estatísticas do utilizador
+$total_user = $conn->query("SELECT COUNT(*) t FROM ocorrencias WHERE utilizador_id=$user_id")->fetch_assoc()['t'];
+$pendentes_user = $conn->query("SELECT COUNT(*) t FROM ocorrencias WHERE utilizador_id=$user_id AND estado='Pendente'")->fetch_assoc()['t'];
+$resolvidas_user = $conn->query("SELECT COUNT(*) t FROM ocorrencias WHERE utilizador_id=$user_id AND estado='Resolvida'")->fetch_assoc()['t'];
+$em_andamento_user = $total_user - $pendentes_user - $resolvidas_user;
 ?>
 <!DOCTYPE html>
 <html lang="pt">
@@ -42,9 +52,15 @@ $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
                 <a href="dashboard.php" class="nav-link active">Dashboard</a>
                 <a href="minhas_ocorrencias.php" class="nav-link">Minhas Ocorrências</a>
                 <a href="index.php" class="nav-link">Ver Todas</a>
+                <?php if ($is_admin): ?>
+                    <a href="responsavel/ocorrencias.php" class="nav-link" style="color: var(--nu-purple); font-weight: 700;">Painel Admin</a>
+                <?php endif; ?>
                 <div class="nav-user">
                     <div class="user-avatar"><?= $iniciais ?></div>
                     <span class="user-name"><?= $nome ?></span>
+                    <?php if ($is_admin): ?>
+                        <span class="admin-badge">Admin</span>
+                    <?php endif; ?>
                     <a href="logout.php" class="btn btn-outline btn-sm">Sair</a>
                 </div>
             </div>
@@ -60,6 +76,41 @@ $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
                 <h2>Olá, <?= $nome ?>!</h2>
                 <p>Bem-vindo ao sistema de registo de ocorrências comunitárias. Selecione uma categoria abaixo para registar uma nova ocorrência.</p>
             </div>
+
+            <!-- STATS DO UTILIZADOR -->
+            <?php if ($total_user > 0): ?>
+            <div class="stats-grid fade-in" style="margin-bottom: 2rem;">
+                <div class="stat-card">
+                    <div class="stat-card-label">As Minhas Ocorrências</div>
+                    <div class="stat-card-value"><?= $total_user ?></div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-card-label">Pendentes</div>
+                    <div class="stat-card-value"><?= $pendentes_user ?></div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-card-label">Em Andamento</div>
+                    <div class="stat-card-value"><?= max(0, $em_andamento_user) ?></div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-card-label">Resolvidas</div>
+                    <div class="stat-card-value"><?= $resolvidas_user ?></div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <?php if ($is_admin): ?>
+            <!-- ACESSO RÁPIDO ADMIN -->
+            <div class="table-container fade-in" style="margin-bottom: 2rem; padding: 1.25rem 1.5rem; border-left: 4px solid var(--nu-purple);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h3 style="font-size: 1rem; margin-bottom: .25rem;">Painel de Administração</h3>
+                        <p style="font-size: 0.875rem; margin: 0;">Aceda ao painel para gerir e atualizar o estado das ocorrências.</p>
+                    </div>
+                    <a href="responsavel/ocorrencias.php" class="btn btn-primary">Ir para o Painel Admin</a>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <!-- SECTION HEADER -->
             <div class="section-header">
