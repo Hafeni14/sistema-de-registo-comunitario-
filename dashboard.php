@@ -74,7 +74,7 @@ $em_andamento_user = $total_user - $pendentes_user - $resolvidas_user;
             <!-- WELCOME SECTION -->
             <div class="welcome-section fade-in">
                 <h2>Olá, <?= $nome ?>!</h2>
-                <p>Bem-vindo ao sistema de registo de ocorrências comunitárias. Selecione uma categoria abaixo para registar uma nova ocorrência.</p>
+                <p>Bem-vindo ao Sistema de Registo de Ocorrências Nacionais. Selecione uma categoria abaixo para registar uma nova ocorrência.</p>
             </div>
 
             <!-- STATS DO UTILIZADOR -->
