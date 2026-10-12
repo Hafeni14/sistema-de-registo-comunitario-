@@ -1,0 +1,23 @@
+/* Migração 006: Popular as 21 províncias de Angola (Lei n.º 14/24, em vigor desde 01/01/2025) */
+INSERT IGNORE INTO provincias (nome) VALUES
+    ('Bengo'),
+    ('Benguela'),
+    ('Bié'),
+    ('Cabinda'),
+    ('Cuando'),
+    ('Cuanza Norte'),
+    ('Cuanza Sul'),
+    ('Cubango'),
+    ('Cunene'),
+    ('Huambo'),
+    ('Huíla'),
+    ('Icolo e Bengo'),
+    ('Luanda'),
+    ('Lunda Norte'),
+    ('Lunda Sul'),
+    ('Malanje'),
+    ('Moxico'),
+    ('Moxico Leste'),
+    ('Namibe'),
+    ('Uíge'),
+    ('Zaire');

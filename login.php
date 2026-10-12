@@ -6,13 +6,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST["email"]);
     $senha = $_POST["senha"];
 
-    $res = $conn->query("SELECT * FROM utilizadores WHERE email='$email'");
+    $stmt = $conn->prepare("SELECT * FROM utilizadores WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $res = $stmt->get_result();
     $u = $res->fetch_assoc();
 
     if ($u && password_verify($senha, $u["senha"])) {
         $_SESSION["utilizador_id"] = $u["id"];
         $_SESSION["nome"] = $u["nome"];
         $_SESSION["is_admin"] = !empty($u["is_admin"]) ? 1 : 0;
+        $_SESSION["nivel_acesso"] = $u["nivel_acesso"] ?? 'cidadao';
+        $_SESSION["municipio_id"] = $u["municipio_id"] ?? null;
+        $_SESSION["pode_gerir"] = in_array($_SESSION["nivel_acesso"], ['responsavel', 'admin_nacional']) ? 1 : 0;
         header("Location: dashboard.php");
         exit;
     } else {
@@ -60,6 +66,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <button type="submit" class="btn btn-primary btn-block btn-lg">Entrar</button>
                 </div>
 
+                <div class="form-link">
+                    <a href="recuperar-senha.php">Esqueceu a senha?</a>
+                </div>
                 <div class="form-link">
                     Não tem uma conta? <a href="registar.php">Criar conta</a>
                 </div>

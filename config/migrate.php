@@ -5,6 +5,12 @@
  * Requer que $conn já esteja definido (incluído após db.php).
  */
 
+// Desde o PHP 8.1, o mysqli lança exceções em erros de SQL por omissão.
+// Este runner foi escrito à espera do comportamento antigo (query() a
+// devolver false e $conn->errno a ficar disponível), para poder tolerar
+// erros esperados como "coluna já existe" (1060). Repor esse comportamento:
+mysqli_report(MYSQLI_REPORT_OFF);
+
 // 1. Criar tabela de controlo de migrations (se não existir)
 $conn->query("
     CREATE TABLE IF NOT EXISTS migrations (
@@ -13,6 +19,7 @@ $conn->query("
         executado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
 ");
+
 
 // 2. Obter migrations já executadas
 $executadas = [];

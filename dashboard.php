@@ -10,7 +10,7 @@ include "config/helpers.php";
 $nome = htmlspecialchars($_SESSION["nome"]);
 $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
 $user_id = $_SESSION["utilizador_id"];
-$is_admin = !empty($_SESSION['is_admin']);
+$is_admin = !empty($_SESSION['pode_gerir']);
 
 // Estatísticas do utilizador
 $total_user = $conn->query("SELECT COUNT(*) t FROM ocorrencias WHERE utilizador_id=$user_id")->fetch_assoc()['t'];
@@ -59,7 +59,7 @@ $em_andamento_user = $total_user - $pendentes_user - $resolvidas_user;
                     <div class="user-avatar"><?= $iniciais ?></div>
                     <span class="user-name"><?= $nome ?></span>
                     <?php if ($is_admin): ?>
-                        <span class="admin-badge">Admin</span>
+                        <span class="admin-badge"><?= (($_SESSION['nivel_acesso'] ?? '') === 'admin_nacional') ? 'Admin Nacional' : 'Responsável' ?></span>
                     <?php endif; ?>
                     <a href="logout.php" class="btn btn-outline btn-sm">Sair</a>
                 </div>
@@ -74,7 +74,7 @@ $em_andamento_user = $total_user - $pendentes_user - $resolvidas_user;
             <!-- WELCOME SECTION -->
             <div class="welcome-section fade-in">
                 <h2>Olá, <?= $nome ?>!</h2>
-                <p>Bem-vindo ao Sistema de Registo de Ocorrências Nacionais. Selecione uma categoria abaixo para registar uma nova ocorrência.</p>
+                <p>Bem-vindo ao sistema de registo de ocorrências comunitárias. Selecione uma categoria abaixo para registar uma nova ocorrência.</p>
             </div>
 
             <!-- STATS DO UTILIZADOR -->

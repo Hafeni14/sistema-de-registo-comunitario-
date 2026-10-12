@@ -1,6 +1,7 @@
 <?php
 session_start();
 include "config/db.php";
+include "config/helpers.php";
 
 if (!isset($_SESSION["utilizador_id"])) {
     header("Location: login.php");
@@ -15,35 +16,63 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $tipo = $_POST["tipo"];
     $bairro = $_POST["bairro"];
     $user_id = $_SESSION["utilizador_id"];
-    $imagem_base64 = null;
+    $imagem_path = null;
 
-    // Processar upload de imagem
+    // Processar upload de imagem — grava em disco, guarda só o caminho na BD
+    // (base64 na coluna infla a base de dados ~33% por imagem; a escala nacional
+    // isto pesa rápido. Ver /uploads/ocorrencias/.)
     if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] == UPLOAD_ERR_OK) {
-        $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $allowed_types = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/gif'  => 'gif',
+            'image/webp' => 'webp',
+        ];
         $file_type = $_FILES['imagem']['type'];
         $file_size = $_FILES['imagem']['size'];
         $max_size = 5 * 1024 * 1024; // 5MB
 
-        if (in_array($file_type, $allowed_types) && $file_size <= $max_size) {
-            $image_data = file_get_contents($_FILES['imagem']['tmp_name']);
-            $imagem_base64 = 'data:' . $file_type . ';base64,' . base64_encode($image_data);
+        if (isset($allowed_types[$file_type]) && $file_size <= $max_size) {
+            $pasta_uploads = __DIR__ . '/uploads/ocorrencias';
+            if (!is_dir($pasta_uploads)) {
+                mkdir($pasta_uploads, 0775, true);
+            }
+            $nome_ficheiro = uniqid('ocorrencia_', true) . '.' . $allowed_types[$file_type];
+            $destino = $pasta_uploads . '/' . $nome_ficheiro;
+
+            if (is_writable($pasta_uploads) && move_uploaded_file($_FILES['imagem']['tmp_name'], $destino)) {
+                $imagem_path = '/uploads/ocorrencias/' . $nome_ficheiro;
+            } else {
+                $erro = "Não foi possível guardar a imagem no servidor. Tenta novamente ou continua sem imagem.";
+            }
         } else {
             $erro = "Imagem inválida. Use JPG, PNG, GIF ou WEBP (max 5MB).";
         }
     }
 
+    // Derivar município/província a partir do bairro escolhido (routing geográfico)
+    $geo = !isset($erro) ? obterGeografiaDoBairro($conn, $bairro) : null;
+    if (!isset($erro) && !$geo) {
+        $erro = "Bairro inválido. Selecione um bairro da lista.";
+    }
+
     if (!isset($erro)) {
+        $municipio_id = (int) $geo['municipio_id'];
+        $provincia_id = (int) $geo['provincia_id'];
+        $responsavel_id = atribuirResponsavelAutomatico($conn, $municipio_id);
+
         $titulo_escaped = $conn->real_escape_string($titulo);
         $descricao_escaped = $conn->real_escape_string($descricao);
         $tipo_escaped = $conn->real_escape_string($tipo);
-        $imagem_escaped = $imagem_base64 ? $conn->real_escape_string($imagem_base64) : null;
+        $imagem_escaped = $imagem_path ? $conn->real_escape_string($imagem_path) : null;
+        $responsavel_sql = $responsavel_id ? (int) $responsavel_id : "NULL";
 
         if ($imagem_escaped) {
-            $sql = "INSERT INTO ocorrencias (titulo, descricao, imagem, tipo, bairro_id, utilizador_id)
-                    VALUES ('$titulo_escaped', '$descricao_escaped', '$imagem_escaped', '$tipo_escaped', '$bairro', '$user_id')";
+            $sql = "INSERT INTO ocorrencias (titulo, descricao, imagem, tipo, bairro_id, municipio_id, provincia_id, utilizador_id, responsavel_id)
+                    VALUES ('$titulo_escaped', '$descricao_escaped', '$imagem_escaped', '$tipo_escaped', '$bairro', '$municipio_id', '$provincia_id', '$user_id', $responsavel_sql)";
         } else {
-            $sql = "INSERT INTO ocorrencias (titulo, descricao, tipo, bairro_id, utilizador_id)
-                    VALUES ('$titulo_escaped', '$descricao_escaped', '$tipo_escaped', '$bairro', '$user_id')";
+            $sql = "INSERT INTO ocorrencias (titulo, descricao, tipo, bairro_id, municipio_id, provincia_id, utilizador_id, responsavel_id)
+                    VALUES ('$titulo_escaped', '$descricao_escaped', '$tipo_escaped', '$bairro', '$municipio_id', '$provincia_id', '$user_id', $responsavel_sql)";
         }
 
         if ($conn->query($sql)) {
@@ -91,14 +120,14 @@ $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
                 <a href="dashboard.php" class="nav-link">Dashboard</a>
                 <a href="minhas_ocorrencias.php" class="nav-link">Minhas Ocorrências</a>
                 <a href="index.php" class="nav-link">Ver Todas</a>
-                <?php if (!empty($_SESSION['is_admin'])): ?>
+                <?php if (!empty($_SESSION['pode_gerir'])): ?>
                     <a href="responsavel/ocorrencias.php" class="nav-link" style="color: var(--nu-purple); font-weight: 700;">Painel Admin</a>
                 <?php endif; ?>
                 <div class="nav-user">
                     <div class="user-avatar"><?= $iniciais ?></div>
                     <span class="user-name"><?= $nome ?></span>
-                    <?php if (!empty($_SESSION['is_admin'])): ?>
-                        <span class="admin-badge">Admin</span>
+                    <?php if (!empty($_SESSION['pode_gerir'])): ?>
+                        <span class="admin-badge"><?= (($_SESSION['nivel_acesso'] ?? '') === 'admin_nacional') ? 'Admin Nacional' : 'Responsável' ?></span>
                     <?php endif; ?>
                     <a href="logout.php" class="btn btn-outline btn-sm">Sair</a>
                 </div>
@@ -166,10 +195,22 @@ $iniciais = strtoupper(substr($_SESSION["nome"], 0, 2));
                         <select id="bairro" name="bairro" class="form-control" required>
                             <option value="">Selecione o bairro</option>
                             <?php
-                            $res = $conn->query("SELECT * FROM bairros ORDER BY nome");
+                            $res = $conn->query("
+                                SELECT b.id, b.nome AS bairro, m.nome AS municipio
+                                FROM bairros b
+                                JOIN municipios m ON b.municipio_id = m.id
+                                ORDER BY m.nome, b.nome
+                            ");
+                            $municipio_atual = null;
                             while ($b = $res->fetch_assoc()) {
-                                echo "<option value='{$b['id']}'>{$b['nome']}</option>";
+                                if ($b['municipio'] !== $municipio_atual) {
+                                    if ($municipio_atual !== null) echo "</optgroup>";
+                                    echo "<optgroup label='" . htmlspecialchars($b['municipio']) . "'>";
+                                    $municipio_atual = $b['municipio'];
+                                }
+                                echo "<option value='{$b['id']}'>" . htmlspecialchars($b['bairro']) . "</option>";
                             }
+                            if ($municipio_atual !== null) echo "</optgroup>";
                             ?>
                         </select>
                     </div>

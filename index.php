@@ -44,17 +44,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_logged_in) {
 // Resolver ocorrência foi movido para o painel de administração
 // Apenas admins podem mudar o estado das ocorrências
 
-// Buscar todas ocorrências
+// Paginação — evita carregar todas as ocorrências do país de uma vez
+$por_pagina = 20;
+$pagina = isset($_GET['pagina']) ? max(1, (int) $_GET['pagina']) : 1;
+$offset = ($pagina - 1) * $por_pagina;
+
+$total = $conn->query("SELECT COUNT(*) t FROM ocorrencias")->fetch_assoc()['t'];
+$total_paginas = max(1, (int) ceil($total / $por_pagina));
+if ($pagina > $total_paginas) {
+    $pagina = $total_paginas;
+    $offset = ($pagina - 1) * $por_pagina;
+}
+
+// Buscar ocorrências da página atual
 $sql = "
-SELECT o.*, b.nome AS bairro, u.nome AS utilizador
+SELECT o.*, b.nome AS bairro, m.nome AS municipio, p.nome AS provincia, u.nome AS utilizador
 FROM ocorrencias o
 JOIN bairros b ON o.bairro_id = b.id
+JOIN municipios m ON o.municipio_id = m.id
+JOIN provincias p ON o.provincia_id = p.id
 JOIN utilizadores u ON o.utilizador_id = u.id
 ORDER BY o.data_registo DESC
+LIMIT $offset, $por_pagina
 ";
 
 $res = $conn->query($sql);
-$total = $res->num_rows;
 
 // Função para obter likes de uma ocorrência
 function getLikes($conn, $ocorrencia_id, $user_id = null) {
@@ -121,14 +135,14 @@ function countComentarios($conn, $ocorrencia_id) {
                     <a href="dashboard.php" class="nav-link">Dashboard</a>
                     <a href="minhas_ocorrencias.php" class="nav-link">Minhas Ocorrências</a>
                     <a href="index.php" class="nav-link active">Ver Todas</a>
-                    <?php if (!empty($_SESSION['is_admin'])): ?>
+                    <?php if (!empty($_SESSION['pode_gerir'])): ?>
                         <a href="responsavel/ocorrencias.php" class="nav-link" style="color: var(--nu-purple); font-weight: 700;">Painel Admin</a>
                     <?php endif; ?>
                     <div class="nav-user">
                         <div class="user-avatar"><?= $iniciais ?></div>
                         <span class="user-name"><?= $nome ?></span>
-                        <?php if (!empty($_SESSION['is_admin'])): ?>
-                            <span class="admin-badge">Admin</span>
+                        <?php if (!empty($_SESSION['pode_gerir'])): ?>
+                            <span class="admin-badge"><?= (($_SESSION['nivel_acesso'] ?? '') === 'admin_nacional') ? 'Admin Nacional' : 'Responsável' ?></span>
                         <?php endif; ?>
                         <a href="logout.php" class="btn btn-outline btn-sm">Sair</a>
                     </div>
@@ -213,7 +227,7 @@ function countComentarios($conn, $ocorrencia_id) {
                                     <span class="tag tag-<?= $tipo_class ?>"><?= htmlspecialchars($o['tipo']) ?></span>
                                 </span>
                                 <span class="ocorrencia-meta-item">
-                                    <?= htmlspecialchars($o['bairro']) ?>
+                                    <?= htmlspecialchars($o['bairro']) ?>, <?= htmlspecialchars($o['municipio']) ?> — <?= htmlspecialchars($o['provincia']) ?>
                                 </span>
                                 <span class="ocorrencia-meta-item">
                                     <?= htmlspecialchars($o['utilizador']) ?>
@@ -307,6 +321,18 @@ function countComentarios($conn, $ocorrencia_id) {
                         </div>
                     <?php endwhile; ?>
                 </div>
+
+                <?php if ($total_paginas > 1): ?>
+                    <div class="pagination" style="display:flex; justify-content:center; align-items:center; gap:0.5rem; margin-top:2rem;">
+                        <?php if ($pagina > 1): ?>
+                            <a href="?pagina=<?= $pagina - 1 ?>" class="btn btn-outline btn-sm">&laquo; Anterior</a>
+                        <?php endif; ?>
+                        <span style="color: var(--nu-gray-500); font-size:0.875rem;">Página <?= $pagina ?> de <?= $total_paginas ?></span>
+                        <?php if ($pagina < $total_paginas): ?>
+                            <a href="?pagina=<?= $pagina + 1 ?>" class="btn btn-outline btn-sm">Seguinte &raquo;</a>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
 
         </div>

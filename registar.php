@@ -3,19 +3,40 @@ session_start();
 include "config/db.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nome = trim($_POST["nome"]);
-    $email = trim($_POST["email"]);
-    $senha = password_hash($_POST["senha"], PASSWORD_DEFAULT);
+    $nome            = trim($_POST["nome"]);
+    $email           = trim($_POST["email"]);
+    $telefone        = preg_replace('/\s+/', '', trim($_POST["telefone"]));
+    $numero_bi       = strtoupper(trim($_POST["numero_bi"]));
+    $data_nascimento = trim($_POST["data_nascimento"]);
+    $senha           = $_POST["senha"];
 
-    // Verifica se já existe o email
-    $res = $conn->query("SELECT * FROM utilizadores WHERE email='$email'");
-    if ($res->num_rows > 0) {
-        $erro = "Este email já está registado!";
+    $idade = (new DateTime())->diff(new DateTime($data_nascimento))->y;
+
+    if ($idade < 18) {
+        $erro = "Deve ter pelo menos 18 anos para se registar.";
+    } elseif (!preg_match('/^(\+244|00244|0)?9[0-9]{8}$/', $telefone)) {
+        $erro = "Número de telefone inválido. Exemplo: +244 923 456 789";
+    } elseif (!preg_match('/^\d{9}[A-Z]{2}\d{3}$/', $numero_bi)) {
+        $erro = "Número de BI inválido. Formato: 000123456LA041";
     } else {
-        $conn->query("INSERT INTO utilizadores (nome, email, senha)
-                      VALUES ('$nome', '$email', '$senha')") or die($conn->error);
-        header("Location: login.php"); // redireciona para login
-        exit;
+        $email_safe = $conn->real_escape_string($email);
+        $bi_safe    = $conn->real_escape_string($numero_bi);
+        $tel_safe   = $conn->real_escape_string($telefone);
+        $nome_safe  = $conn->real_escape_string($nome);
+        $data_safe  = $conn->real_escape_string($data_nascimento);
+
+        $res = $conn->query("SELECT id FROM utilizadores WHERE email='$email_safe' OR numero_bi='$bi_safe' OR telefone='$tel_safe'");
+
+        if ($res->num_rows > 0) {
+            $erro = "Email, BI ou telefone já se encontram registados.";
+        } else {
+            $senha_hash = password_hash($senha, PASSWORD_DEFAULT);
+            $conn->query("INSERT INTO utilizadores (nome, email, senha, telefone, numero_bi, data_nascimento)
+                          VALUES ('$nome_safe', '$email_safe', '$senha_hash', '$tel_safe', '$bi_safe', '$data_safe')")
+            or die($conn->error);
+            header("Location: login.php");
+            exit;
+        }
     }
 }
 ?>
@@ -47,17 +68,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <form method="POST">
                 <div class="form-group">
                     <label class="form-label" for="nome">Nome completo</label>
-                    <input type="text" id="nome" name="nome" class="form-control" placeholder="O seu nome" required>
+                    <input type="text" id="nome" name="nome" class="form-control"
+                           placeholder="O seu nome completo" required
+                           value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="email">Email</label>
-                    <input type="email" id="email" name="email" class="form-control" placeholder="seu@email.com" required>
+                    <input type="email" id="email" name="email" class="form-control"
+                           placeholder="seu@email.com" required
+                           value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="telefone">Número de Telefone</label>
+                    <input type="tel" id="telefone" name="telefone" class="form-control"
+                           placeholder="+244 923 456 789" required
+                           value="<?= htmlspecialchars($_POST['telefone'] ?? '') ?>">
+                    <small class="form-hint">Formato angolano: +244 9XX XXX XXX</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="numero_bi">Número do Bilhete de Identidade</label>
+                    <input type="text" id="numero_bi" name="numero_bi" class="form-control"
+                           placeholder="000123456LA041" maxlength="14"
+                           style="text-transform:uppercase" required
+                           value="<?= htmlspecialchars($_POST['numero_bi'] ?? '') ?>">
+                    <small class="form-hint">9 dígitos + 2 letras + 3 dígitos</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="data_nascimento">Data de Nascimento</label>
+                    <input type="date" id="data_nascimento" name="data_nascimento" class="form-control"
+                           required max="<?= date('Y-m-d', strtotime('-18 years')) ?>"
+                           value="<?= htmlspecialchars($_POST['data_nascimento'] ?? '') ?>">
+                    <small class="form-hint">Idade mínima: 18 anos</small>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="senha">Senha</label>
-                    <input type="password" id="senha" name="senha" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6">
+                    <input type="password" id="senha" name="senha" class="form-control"
+                           placeholder="Mínimo 6 caracteres" required minlength="6">
                 </div>
 
                 <div class="form-footer">
