@@ -68,6 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href="responsaveis.php" class="nav-link">Responsáveis</a>
                 <a href="repor-senha.php" class="nav-link active">Repor Senha</a>
                 <a href="../dashboard_nacional.php" class="nav-link">Dashboard Nacional</a>
+                <?= linkChatNav($conn, '../') ?>
                 <div class="nav-user">
                     <div class="user-avatar"><?= $admin_iniciais ?></div>
                     <span class="user-name"><?= $admin_nome ?></span>

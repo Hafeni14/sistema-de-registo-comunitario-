@@ -80,6 +80,7 @@ $ranking_municipios = $conn->query("
                 <a href="admin/responsaveis.php" class="nav-link">Responsáveis</a>
                 <a href="admin/repor-senha.php" class="nav-link">Repor Senha</a>
                 <a href="dashboard_nacional.php" class="nav-link active">Dashboard Nacional</a>
+                <?= linkChatNav($conn, '') ?>
                 <div class="nav-user">
                     <div class="user-avatar"><?= $admin_iniciais ?></div>
                     <span class="user-name"><?= $admin_nome ?></span>

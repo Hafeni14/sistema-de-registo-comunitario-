@@ -128,6 +128,7 @@ $result = mysqli_query($conn, "
                     <a href="../admin/repor-senha.php" class="nav-link">Repor Senha</a>
                     <a href="../dashboard_nacional.php" class="nav-link">Dashboard Nacional</a>
                 <?php endif; ?>
+                <?= linkChatNav($conn, '../') ?>
                 <a href="../index.php" class="nav-link">Ver Site</a>
                 <div class="nav-user">
                     <div class="user-avatar"><?= $admin_iniciais ?></div>

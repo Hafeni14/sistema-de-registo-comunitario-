@@ -89,3 +89,66 @@ function atribuirResponsavelAutomatico($conn, $municipio_id) {
     }
     return null;
 }
+
+/* ------------------------------------------------------------------
+ * Chat privado (administradores nacionais + responsáveis)
+ * ------------------------------------------------------------------ */
+
+/**
+ * Verifica se o utilizador atual pode ver/escrever num canal do chat.
+ * - 'nacional': admin nacional e responsáveis
+ * - 'm<ID>': admin nacional (todos) ou o responsável desse município
+ */
+function podeAcederCanal($canal_chave) {
+    if (isAdminNacional()) {
+        return $canal_chave === 'nacional' || preg_match('/^m[0-9]+$/', $canal_chave) === 1;
+    }
+    if (isResponsavel()) {
+        $mun = (int) ($_SESSION['municipio_id'] ?? 0);
+        return $canal_chave === 'nacional' || ($mun > 0 && $canal_chave === 'm' . $mun);
+    }
+    return false;
+}
+
+/** Só admins nacionais e responsáveis usam o chat */
+function podeUsarChat() {
+    return isAdminNacional() || isResponsavel();
+}
+
+/**
+ * Número total de mensagens não lidas (de outros) nos canais a que o utilizador tem acesso.
+ */
+function chatNaoLidas($conn) {
+    if (!podeUsarChat()) return 0;
+    $uid = (int) $_SESSION['utilizador_id'];
+
+    if (isAdminNacional()) {
+        $filtro = "1=1";
+    } else {
+        $mun = (int) ($_SESSION['municipio_id'] ?? 0);
+        $filtro = "m.canal_chave IN ('nacional', 'm$mun')";
+    }
+
+    $sql = "SELECT COUNT(*) AS total
+            FROM chat_mensagens m
+            LEFT JOIN chat_leituras l ON l.utilizador_id = $uid AND l.canal_chave = m.canal_chave
+            WHERE m.id > COALESCE(l.ultima_id, 0) AND m.autor_id <> $uid AND $filtro";
+    $res = $conn->query($sql);
+    return $res ? (int) $res->fetch_assoc()['total'] : 0;
+}
+
+/** Link "Chat" para a barra de navegação, com contador de não lidas. $prefixo = caminho relativo até à raiz */
+function linkChatNav($conn, $prefixo = '', $ativo = false) {
+    if (!podeUsarChat()) return '';
+    $n = chatNaoLidas($conn);
+    $badge = $n > 0 ? ' <span class="chat-badge">' . ($n > 99 ? '99+' : $n) . '</span>' : '';
+    return '<a href="' . $prefixo . 'chat.php" class="nav-link' . ($ativo ? ' active' : '') . '">Chat' . $badge . '</a>';
+}
+
+/** Token CSRF simples para os pedidos POST do chat */
+function chatCsrfToken() {
+    if (empty($_SESSION['chat_csrf'])) {
+        $_SESSION['chat_csrf'] = bin2hex(random_bytes(16));
+    }
+    return $_SESSION['chat_csrf'];
+}
